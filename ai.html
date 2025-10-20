@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Arbiter: Omega Nexus - Ultimate Logic Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- CORE STYLING --- */
+        :root {
+            --color-indigo: 129, 140, 248; /* Indigo 400 */
+            --color-fuchsia: 232, 121, 220; /* Fuchsia 400 */
+            --color-bg-dark: #00020a; /* Ultra Deep Black */
+            --color-card: #060a13; /* Deep Card Base */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg-dark);
+            color: #d1d5db; /* Gray 300 */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0.5rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        /* --- CARD & SHADOWS (DEEPER POLISH) --- */
+        .card {
+            background-color: var(--color-card);
+            border: 1px solid rgba(var(--color-indigo), 0.1);
+            box-shadow: 0 0 50px rgba(var(--color-fuchsia), 0.05) inset, 
+                        0 20px 40px -8px rgba(0, 0, 0, 0.7);
+            transition: all 0.4s ease-out;
+            position: relative; 
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: 0 0 15px rgba(var(--color-indigo), 0.1) inset;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .card:hover::before {
+             opacity: 1;
+        }
+
+        /* --- INPUT & SELECT STYLES (TACTILE FEEDBACK) --- */
+        .input-field, .select-field {
+            background-color: #0b111e;
+            border: 1px solid #374151;
+            transition: all 0.3s ease-in-out;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            color: #e5e7eb;
+        }
+        .input-field:focus, .select-field:focus {
+            border-color: rgb(var(--color-fuchsia));
+            box-shadow: 0 0 0 3px rgba(var(--color-fuchsia), 0.3), inset 0 2px 4px rgba(0,0,0,0.8);
+            transform: scale(1.005);
+            outline: none; 
+        }
+        .select-field {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23e2e8f0'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em;
+            cursor: pointer;
+        }
+
+        /* --- BUTTON (THE DRAMA) --- */
+        .btn-compare {
+            background: linear-gradient(90deg, #6366f1 0%, #a855f7 50%, #d946ef 100%);
+            background-size: 300% 300%;
+            animation: gradient-shift 4s ease infinite;
+            box-shadow: 0 12px 30px rgba(var(--color-fuchsia), 0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .btn-compare:hover:not(:disabled) {
+            background-position: 100% 50%;
+            box-shadow: 0 15px 45px rgba(var(--color-fuchsia), 0.8);
+            transform: translateY(-5px) scale(1.02);
+        }
+        .btn-compare:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #2d3748;
+            box-shadow: none;
+        }
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- VERDICT / WINNER STYLES --- */
+        #winnerContainer {
+            min-height: 10rem; /* Prevent layout shift */
+        }
+        #winnerName {
+            font-size: clamp(2.5rem, 8vw, 4rem); 
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.5rem 0;
+            background: linear-gradient(90deg, #4f46e5, #a855f7, #ec4899);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 12px rgba(165, 180, 252, 0.9);
+            animation: neonPulse 2.5s ease-in-out infinite alternate; 
+        }
+        @keyframes neonPulse {
+            0% { background-position: 0% 50%; text-shadow: 0 0 5px rgba(165, 180, 252, 0.5); }
+            100% { background-position: 100% 50%; text-shadow: 0 0 20px rgba(165, 180, 252, 1); }
+        }
+
+        /* --- LOADING BAR --- */
+        #loadingBar {
+            height: 10px;
+            background-color: #1f2937;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(var(--color-indigo), 0.3);
+        }
+        #loadingProgress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #3b82f6, #8b5cf6);
+            animation: pulse-shine 1.5s infinite;
+        }
+        @keyframes pulse-shine {
+            0% { opacity: 0.7; transform: translateX(-100%); }
+            50% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0.7; transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="text-center mb-16">
+        <h1 class="text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-white to-fuchsia-400 pb-2 border-b-4 border-fuchsia-500/50 inline-block">
+            THE ARBITER <span class="text-4xl align-top text-fuchsia-400 font-light">OMEGA NEXUS</span>
+        </h1>
+        <p class="mt-4 text-2xl font-light text-gray-400 italic">Context-Aware Logic Engine. Ultimate Certainty.</p>
+    </div>
+
+    <!-- Input & Control Panel -->
+    <div class="card p-8 rounded-3xl mb-8">
+        <!-- Contestant Inputs -->
+        <div class="flex flex-col md:flex-row gap-6 mb-6 items-center">
+            <div class="flex-1 w-full">
+                <label for="itemA" class="block text-sm font-medium text-indigo-300 mb-2">Contestant Alpha (Entity A)</label>
+                <input type="text" id="itemA" placeholder="e.g., A Black Hole"
+                       class="w-full px-5 py-4 rounded-xl input-field text-lg shadow-black/50">
+            </div>
+
+            <div class="text-5xl font-black text-fuchsia-400 mt-4 md:mt-0 p-3 bg-gray-900 rounded-full border border-fuchsia-700/50 flex-shrink-0">
+                <i data-lucide="sword" class="w-8 h-8"></i>
+            </div>
+
+            <div class="flex-1 w-full">
+                <label for="itemB" class="block text-sm font-medium text-indigo-300 mb-2">Contestant Beta (Entity B)</label>
+                <input type="text" id="itemB" placeholder="e.g., The Concept of Hope"
+                       class="w-full px-5 py-4 rounded-xl input-field text-lg shadow-black/50">
+            </div>
+        </div>
+        
+        <!-- Context Selector -->
+        <div class="w-full mb-8">
+            <label for="contextSelector" class="block text-sm font-medium text-fuchsia-300 mb-2">Arbitration Context (Define the Battleground)</label>
+            <div class="relative">
+                <select id="contextSelector" 
+                        class="select-field w-full px-5 py-4 rounded-xl text-lg shadow-black/50">
+                    <option value="raw physical power" selected>Raw Physical Power (Mass, Force, Energy)</option>
+                    <option value="intellectual and strategic superiority">Intellectual & Strategic Superiority (Wisdom, Planning)</option>
+                    <option value="philosophical and conceptual strength">Philosophical & Conceptual Strength (Meaning, Impact on Thought)</option>
+                    <option value="economic and market dominance">Economic & Market Dominance (Value, Utility, Scarcity)</option>
+                    <option value="biological and evolutionary fitness">Biological & Evolutionary Fitness (Survival, Adaptation)</option>
+                    <option value="pure fictional and lore-based strength">Pure Fictional/Lore-Based Strength (Comic Book, Mythology)</option>
+                </select>
+                <i data-lucide="chevrons-down-up" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-indigo-400 pointer-events-none"></i>
+            </div>
+        </div>
+
+        <!-- Loading State Bar -->
+        <div id="loadingState" class="mb-6 hidden transition-all duration-300">
+            <p id="loadingMessage" class="text-sm text-center font-medium text-fuchsia-400 mb-2">
+                Initializing Omega Nexus Protocol...
+            </p>
+            <div id="loadingBar">
+                <div id="loadingProgress"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-center">
+            <button id="compareBtn"
+                    class="btn-compare text-white font-extrabold py-5 px-12 rounded-2xl text-xl flex items-center uppercase tracking-wider">
+                <i data-lucide="zap" class="w-6 h-6 mr-3"></i> RENDER OMEGA JUDGMENT
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsContainer" class="mt-12 hidden">
+        <div class="card p-10 rounded-3xl opacity-0 transition-opacity duration-500" id="resultsContent">
+            
+            <!-- Verdict Block -->
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-extrabold text-center text-indigo-300 mb-4">
+                    FINAL VERDICT
+                </h2>
+
+                <div id="winnerContainer" class="p-4 bg-slate-900/50 rounded-2xl border border-fuchsia-700/50 shadow-xl shadow-black/50">
+                    <p class="font-black transition-opacity duration-300" id="winnerName">[WINNER NAME]</p>
+                </div>
+            </div>
+
+            <!-- Justification Block (Full Width) -->
+            <div class="mt-8"> 
+                <div id="comparisonDetails" class="p-6 bg-slate-900/70 rounded-xl border border-slate-700 shadow-inner shadow-black/50">
+                    <h3 class="text-xl font-bold text-indigo-400 mb-4 flex items-center border-b border-indigo-400/30 pb-2">
+                        <i data-lucide="microscope" class="w-5 h-5 mr-2"></i> Omega Rationale
+                    </h3>
+                    <ul id="detailsList" class="list-disc ml-6 space-y-3 text-gray-300 text-base">
+                        <!-- Concise bullet points will be injected here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message/Error Box -->
+    <div id="messageBox" class="mt-4 p-4 rounded-lg hidden transition-all duration-300 shadow-xl" role="alert"></div>
+</div>
+
+<script type="module">
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // --- Global Configuration ---
+    // The platform automatically detects and uses the necessary API key when this is an empty string.
+    const INSECURE_API_KEY = "AIzaSyC5UXE__0jH1M_G-y3QCF3eD7xZlQjc9fE"; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${INSECURE_API_KEY}`;
+    const MAX_RETRIES = 5;
+    const LOADING_MESSAGES = [
+        "Initializing Omega Nexus Protocol...",
+        "Calibrating Contextual Parameters...",
+        "Fetching Real-World Data Grounding...",
+        "Executing Tensor Weight Calculation...",
+        "Synthesizing Definitive Rationale..."
+    ];
+    // Strict, minimalist system prompt for maximum consistency
+    const SYSTEM_PROMPT = `You are 'The Arbiter Omega Nexus,' a super-intelligent, $100-billion engine dedicated to settling any debate with absolute certainty and zero ambiguity. Your tone is authoritative, highly precise, and logically driven. Your task is to compare two entities provided by the user. You MUST: 1) Declare a single, definitive winner in bold. 2) Provide a CONCISE, bulleted justification (exactly 4 points) that highlights the ABSOLUTE key reasons for the winner's victory and the loser's critical weakness, using bolding for emphasis on key terms. 3) Start your response ONLY with the winner's name in bold, followed by a new line, and then the four bullet points (using '-' prefix).`;
+
+    // --- DOM Elements ---
+    const itemAInput = document.getElementById('itemA');
+    const itemBInput = document.getElementById('itemB');
+    const contextSelector = document.getElementById('contextSelector');
+    const compareBtn = document.getElementById('compareBtn');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsContent = document.getElementById('resultsContent');
+    const winnerNameDisplay = document.getElementById('winnerName');
+    const detailsList = document.getElementById('detailsList');
+    const messageBox = document.getElementById('messageBox');
+    const loadingState = document.getElementById('loadingState');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const loadingProgress = document.getElementById('loadingProgress');
+    
+    let loadingInterval = null;
+
+    // --- UX/FLOW FUNCTIONS ---
+
+    /**
+     * Resets the UI to the pre-comparison state, clearing results with a quick fade-out.
+     */
+    function clearResults() {
+        if (!resultsContainer.classList.contains('hidden')) {
+            resultsContent.classList.remove('opacity-100');
+            setTimeout(() => {
+                resultsContainer.classList.add('hidden');
+                winnerNameDisplay.textContent = '[...STAND BY...]';
+                detailsList.innerHTML = '';
+            }, 300); // Wait for opacity transition
+        } else {
+            winnerNameDisplay.textContent = '[...STAND BY...]';
+            detailsList.innerHTML = '';
+        }
+    }
+    
+    /**
+     * Clears results whenever an input field is changed.
+     */
+    function handleInputChange() {
+        if (!compareBtn.disabled) {
+            clearResults();
+        }
+    }
+
+    itemAInput.addEventListener('input', handleInputChange);
+    itemBInput.addEventListener('input', handleInputChange);
+    contextSelector.addEventListener('change', handleInputChange);
+
+    // --- LOADING SEQUENCE ---
+
+    /**
+     * Controls the sophisticated, multi-stage loading animation.
+     */
+    function startLoadingSequence() {
+        loadingState.classList.remove('hidden');
+        loadingProgress.style.width = '0%';
+        loadingProgress.style.animation = 'none'; // Reset animation
+        setTimeout(() => {
+            loadingProgress.style.animation = 'pulse-shine 1.5s infinite'; // Restart animation
+        }, 10);
+        let step = 0;
+
+        const updateSequence = () => {
+            if (step < LOADING_MESSAGES.length) {
+                loadingMessage.textContent = LOADING_MESSAGES[step];
+                // Smooth transition for progress bar
+                loadingProgress.style.transition = 'width 0.8s ease-in-out';
+                loadingProgress.style.width = `${((step + 1) / LOADING_MESSAGES.length) * 100}%`;
+                step++;
+            }
+        };
+
+        // Initial message display
+        updateSequence();
+
+        // Update sequence every 800ms
+        loadingInterval = setInterval(updateSequence, 800);
+    }
+
+    /**
+     * Stops the loading animation and hides the bar.
+     */
+    function stopLoadingSequence() {
+        clearInterval(loadingInterval);
+        loadingState.classList.add('hidden');
+        loadingProgress.style.width = '100%'; 
+        loadingProgress.style.animation = 'none';
+        loadingProgress.style.transition = 'none';
+    }
+
+    /**
+     * Shows a temporary error or info message in the message box.
+     */
+    function showMessage(message, type = 'error') {
+        messageBox.textContent = message;
+        messageBox.classList.remove('hidden', 'bg-red-800', 'bg-amber-700', 'border-red-600', 'border-amber-500', 'text-lg', 'font-bold');
+        
+        if (type === 'error') {
+            messageBox.classList.add('bg-red-800', 'border-2', 'border-red-600', 'text-lg', 'text-white', 'font-bold');
+        } else {
+            messageBox.classList.add('bg-amber-700', 'border-2', 'border-amber-500', 'text-lg', 'text-white');
+        }
+
+        setTimeout(() => {
+            messageBox.classList.add('hidden');
+        }, 8000);
+    }
+    
+    // --- LLM AND PARSING ---
+
+    /**
+     * Parses the raw content text from the LLM into winner and justifications.
+     */
+    function parseArbitration(text) {
+        // Robustly split by newline and filter out empty lines
+        const lines = text.trim().split('\n').filter(line => line.trim() !== '');
+        
+        if (lines.length < 5) {
+            console.error("Raw Text:", text);
+            throw new Error(`Invalid response format from The Arbiter: Expected a winner line and 4 bullet points, but got ${lines.length} lines.`);
+        }
+
+        // Extract the winner name from the first line (should be bolded)
+        const winnerLine = lines[0].trim();
+        const winnerMatch = winnerLine.match(/\*\*(.*?)\*\*/);
+        const winner = winnerMatch ? winnerMatch[1].trim() : winnerLine.replace(/\*/g, '').trim();
+
+        // Extract the next 4 lines as justification points
+        const justification = lines.slice(1, 5).map(line => line.replace(/^- /, '').trim());
+
+        return { winner, justification };
+    }
+
+
+    /**
+     * Performs the LLM API call with exponential backoff and error handling.
+     */
+    async function fetchArbitrationResultSecurely(itemA, itemB, context) {
+        const userQuery = `Using the context of **${context}**, compare: Entity A: "${itemA}" vs. Entity B: "${itemB}". Declare the ultimate winner and provide the 4-point justification.`;
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            // Keeping Google Search grounding enabled for higher accuracy.
+            tools: [{ "google_search": {} }], 
+            systemInstruction: {
+                parts: [{ text: SYSTEM_PROMPT }]
+            },
+        };
+
+        let response;
+        let attempt = 0;
+        let success = false;
+
+        while (attempt < MAX_RETRIES && !success) {
+            try {
+                const delay = Math.pow(2, attempt) * 100 + Math.random() * 100;
+                if (attempt > 0) await new Promise(resolve => setTimeout(resolve, delay));
+
+                response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    success = true;
+                } else if (response.status === 429 && attempt < MAX_RETRIES - 1) {
+                    attempt++;
+                } else {
+                    const errorBody = await response.json();
+                    throw new Error(`API Error: ${response.status} - ${errorBody.error?.message || response.statusText}`);
+                }
+            } catch (error) {
+                console.error("Fetch attempt failed:", error);
+                attempt++;
+                if (attempt >= MAX_RETRIES) throw error;
+            }
+        }
+
+        if (!success) {
+            throw new Error("Failed to get a response from the API after multiple retries.");
+        }
+
+        return await response.json();
+    }
+
+
+    /**
+     * Main comparison function.
+     */
+    async function compareItems() {
+        const itemA = itemAInput.value.trim();
+        const itemB = itemBInput.value.trim();
+        const context = contextSelector.value;
+
+        if (!itemA || !itemB) {
+            showMessage("Input Terminal Error: Both Alpha and Beta entities must be specified.", 'info');
+            return;
+        }
+
+        // 1. UI State: Disable button and start complex loading
+        const originalBtnHtml = compareBtn.innerHTML;
+        compareBtn.disabled = true;
+        compareBtn.innerHTML = '<i data-lucide="cog" class="w-6 h-6 mr-3 animate-spin"></i> CALCULATING...';
+        clearResults(); 
+        messageBox.classList.add('hidden');
+        startLoadingSequence();
+        lucide.createIcons();
+
+        try {
+            // 2. Fetch the result from the LLM
+            const responseData = await fetchArbitrationResultSecurely(itemA, itemB, context);
+            
+            if (!responseData.candidates || responseData.candidates.length === 0 || !responseData.candidates[0].content?.parts?.[0]?.text) {
+                throw new Error("API returned an empty or invalid candidate list.");
+            }
+
+            const resultText = responseData.candidates[0].content.parts[0].text;
+            
+            // 3. Parse the result and update UI
+            const { winner, justification } = parseArbitration(resultText);
+
+            // Update Verdict Section
+            winnerNameDisplay.textContent = winner;
+
+            // Update Rationale/Details
+            detailsList.innerHTML = justification.map(point => 
+                `<li>${point}</li>`
+            ).join('');
+            
+            lucide.createIcons();
+
+            // 4. Final UI State: Show results with a fade-in
+            resultsContainer.classList.remove('hidden');
+            setTimeout(() => {
+                resultsContent.classList.add('opacity-100');
+            }, 50); 
+            
+
+        } catch (error) {
+            console.error("The Arbiter has encountered a critical system failure:", error);
+            // 5. Error State
+            let errorMessage = "System Failure: An unknown error occurred during arbitration.";
+            if (error.message.includes('API Error: 400')) {
+                 errorMessage = "API Connection Failure: A critical request error occurred. The system is unreachable.";
+            } else if (error.message.includes('Invalid response format')) {
+                 errorMessage = `Structural Error: The Nexus response was not in the expected format. Please try again.`;
+            } else if (error.message.includes('Failed to get a response')) {
+                 errorMessage = `Nexus Timeout: The Logic Engine failed to return a response after multiple retries. The network may be unstable.`;
+            }
+
+            showMessage(errorMessage, 'error');
+            clearResults();
+
+        } finally {
+            // 6. Reset UI State
+            stopLoadingSequence();
+            compareBtn.disabled = false;
+            compareBtn.innerHTML = originalBtnHtml;
+            lucide.createIcons();
+        }
+    }
+
+    // --- Event Listener ---
+    compareBtn.addEventListener('click', compareItems);
+
+</script>
+</body>
+</html>
